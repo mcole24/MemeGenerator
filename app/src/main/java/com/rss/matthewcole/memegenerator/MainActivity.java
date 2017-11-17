@@ -3,20 +3,26 @@ package com.rss.matthewcole.memegenerator;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,7 +46,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sharePhoto() {
+        createCompositeImage();
+        createShareIntent();
+    }
 
+    private void createShareIntent() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        File sharedFile = new File(getCacheDir(), "images/image.png");
+        Uri uriToImage = FileProvider.getUriForFile(this, "com.mydomain.fileprovider", sharedFile);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uriToImage);
+        shareIntent.setType("image/png");
+        startActivity(shareIntent);
+    }
+
+    private void createCompositeImage() {
+        FrameLayout frameLayout = (FrameLayout)findViewById(R.id.frame_layout_meme);
+        frameLayout.setDrawingCacheEnabled(true);
+        Bitmap bitmap = frameLayout.getDrawingCache();
+        File sharedFile = new File(getCacheDir(), "images");
+        sharedFile.mkdirs();
+        try {
+            FileOutputStream stream = new FileOutputStream(sharedFile + "/image.png");
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            stream.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        frameLayout.setDrawingCacheEnabled(false);
+        frameLayout.destroyDrawingCache();
     }
 
 
